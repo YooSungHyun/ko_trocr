@@ -13,7 +13,7 @@ from transformers import (
 
 from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
 from literal import RawDataColumns
-from utils import DataCollatorForOCR, compute_metrics, del_blank, get_dataset
+from utils import DataCollatorForOCR, clean_text, compute_metrics, get_dataset
 
 
 def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_args: MyTrainingArguments):

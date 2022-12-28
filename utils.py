@@ -1,5 +1,6 @@
 import os
 import random
+import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from unicodedata import normalize
@@ -16,9 +17,10 @@ from literal import DatasetColumns, RawDataColumns
 
 def to_subchar(string):
     return normalize("NFKD", string)
-    
-def del_blank(text:str):
-    text = text.replace(" ","")
+
+
+def clean_text(text: str):
+    text = re.sub(r"[ㄱ-ㅎㅏ-ㅣ ]", "", text)
     return text
 
 
