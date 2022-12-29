@@ -1,2 +1,2 @@
 pip install --upgrade pip
-pip install torch==1.7.0+cu110 -f https://download.pytorch.org/whl/torch_stable.html
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
