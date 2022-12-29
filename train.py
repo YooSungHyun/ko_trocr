@@ -1,15 +1,11 @@
 import logging
 import os
 from functools import partial
-from unicodedata import normalize
 
 from setproctitle import setproctitle
-from torch.utils.data import Dataset
 from transformers import (
     AutoConfig,
     AutoImageProcessor,
-    AutoModel,
-    AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
     Seq2SeqTrainer,
@@ -20,7 +16,10 @@ from transformers import (
 from transformers.trainer_utils import is_main_process
 
 from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
-from utils import DataCollatorForOCR, compute_metrics, get_dataset, seed_everything
+from utils import DataCollatorForOCR
+from utils.augmentation import augmentation
+from utils.dataset_utils import get_dataset
+from utils.training_utils import compute_metrics, seed_everything
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -34,6 +33,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
 
     # 데이터 로드
     train_dataset = get_dataset(dataset_args.train_csv_path)
+    train_dataset.set_transform(augmentation)
     valid_dataset = get_dataset(dataset_args.valid_csv_path)
 
     # 모델, 컨피그 ,프로세서 로드

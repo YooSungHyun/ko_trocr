@@ -1,5 +1,5 @@
-import argparse
 import os
+import time
 import unicodedata
 
 import pandas as pd
@@ -13,7 +13,8 @@ from transformers import (
 
 from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
 from literal import RawDataColumns
-from utils import DataCollatorForOCR, clean_text, compute_metrics, get_dataset
+from utils import DataCollatorForOCR
+from utils.dataset_utils import clean_text, get_dataset
 
 
 def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_args: MyTrainingArguments):
@@ -33,8 +34,11 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     ocr_result = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_result))
     sub = pd.read_csv("data/sample_submission.csv")
     sub[RawDataColumns.label] = ocr_result
-    sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(del_blank)
-    sub.to_csv(dataset_args.result_csv_path, index=False)
+    sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(clean_text)
+    if not os.path.exists("sub"):
+        os.mkdir("sub")
+    csv_name = time.strftime("%Y-%H-%M-%S") + ".csv"
+    sub.to_csv(os.path.join("sub", csv_name), index=False)
 
     pass
 
