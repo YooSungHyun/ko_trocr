@@ -33,16 +33,15 @@ bash shell_scropts/inference.sh
 │   ├── train
 │   └── train.csv
 ├── arguments
-│   ├── DatasetsArguments.py
 │   ├── __init__.py
+│   ├── DatasetsArguments.py
 │   ├── ModelArguments.py
 │   ├── MyTrainingArguments.py
 │   └── __pycache__
 ├── utils
+│   ├── __init__.py
 │   ├── data_collator.py
 │   ├── dataset_utils.py
-│   ├── __init__.py
-│   ├── __pycache__
 │   └── training_utils.py
 ├── shell_scripts
 │   ├── inference.sh
