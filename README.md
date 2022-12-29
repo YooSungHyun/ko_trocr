@@ -44,3 +44,7 @@ bash shell_scropts/inference.sh
 ├── LICENSE
 └── README.md
 ```
+
+## rule
+- 브랜치를 파서 main에 pr
+- 브랜치는 pr 별로 생성 및 삭제
