@@ -17,6 +17,7 @@ from transformers.trainer_utils import is_main_process
 
 from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
 from utils import DataCollatorForOCR
+from utils.augmentation import augmentation
 from utils.dataset_utils import get_dataset
 from utils.training_utils import compute_metrics, seed_everything
 
@@ -32,6 +33,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
 
     # 데이터 로드
     train_dataset = get_dataset(dataset_args.train_csv_path)
+    train_dataset.set_transform(augmentation)
     valid_dataset = get_dataset(dataset_args.valid_csv_path)
 
     # 모델, 컨피그 ,프로세서 로드
