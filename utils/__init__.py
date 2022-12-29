@@ -1,0 +1,1 @@
+from utils.data_collator import DataCollatorForOCR
