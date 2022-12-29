@@ -24,25 +24,40 @@ bash shell_scropts/inference.sh
 
 ## dirs 
 ```
+├── data
+│   ├── open.zip
+│   ├── preprocess
+│   ├── sample_submission.csv
+│   ├── test
+│   ├── test.csv
+│   ├── train
+│   └── train.csv
 ├── arguments
 │   ├── DatasetsArguments.py
 │   ├── __init__.py
 │   ├── ModelArguments.py
-│   └── MyTrainingArguments.py
+│   ├── MyTrainingArguments.py
+│   └── __pycache__
+├── utils
+│   ├── data_collator.py
+│   ├── dataset_utils.py
+│   ├── __init__.py
+│   ├── __pycache__
+│   └── training_utils.py
 ├── shell_scripts
 │   ├── inference.sh
 │   ├── install_base.sh
 │   ├── pid_kill.sh
 │   ├── preprocess.sh
 │   └── run_train.sh
-├── train.py
-├── utils.py
-├── preprocess.py
-├── inference.py
-├── requirements.txt
-├── literal.py
 ├── LICENSE
-└── README.md
+├── literal.py
+├── output
+├── preprocess.py
+├── README.md
+├── requirements.txt
+├── inference.py
+└── train.py
 ```
 
 ## rule
