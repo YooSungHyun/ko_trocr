@@ -131,3 +131,6 @@ dmypy.json
 *.ipynb
 output/
 data/
+wandb/
+sub/
+kfold_sub/

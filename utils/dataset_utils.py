@@ -2,11 +2,8 @@ import os
 import re
 from unicodedata import normalize
 
-import evaluate
-import numpy as np
 import pandas as pd
 from datasets import Dataset, Image
-from transformers import EvalPrediction, TrOCRProcessor
 
 from literal import DatasetColumns, RawDataColumns
 
@@ -36,12 +33,12 @@ def get_dataset(csv_path: os.PathLike, is_sub_char=True) -> Dataset:
     """
     df = pd.read_csv(csv_path)
 
-    data_dict = {DatasetColumns.pixel_values: df[RawDataColumns.img_path]}
+    data_dict = {DatasetColumns.pixel_values: df[RawDataColumns.img_path].tolist()}
 
     if RawDataColumns.label in df.columns:
         if is_sub_char:
             df[RawDataColumns.label] = df[RawDataColumns.label].apply(to_subchar)
-        data_dict[DatasetColumns.labels] = df[RawDataColumns.label]
+        data_dict[DatasetColumns.labels] = df[RawDataColumns.label].tolist()
 
     dataset = Dataset.from_dict(data_dict)
     dataset = dataset.cast_column(DatasetColumns.pixel_values, Image())

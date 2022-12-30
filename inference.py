@@ -3,6 +3,7 @@ import time
 import unicodedata
 
 import pandas as pd
+from torch.utils.data import DataLoader
 from transformers import (
     AutoConfig,
     HfArgumentParser,
@@ -22,23 +23,35 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     processor = TrOCRProcessor.from_pretrained(model_args.model_name_or_path)
     config = AutoConfig.from_pretrained(model_args.model_name_or_path)
     config.num_beams = training_args.generation_num_beams
+    # config.no_repeat_ngram_size = 3
+    # config.length_penalty = 2.0
+
     model = VisionEncoderDecoderModel.from_pretrained(model_args.model_name_or_path, config=config)
     data_collator = DataCollatorForOCR(processor=processor)
+    test_loader = DataLoader(dataset=test_dataset, collate_fn=data_collator, shuffle=False, drop_last=False)
     trainer = Seq2SeqTrainer(
         model=model,
         data_collator=data_collator,
         args=training_args,
     )
-    output = trainer.predict(test_dataset)
-    ocr_result = processor.tokenizer.batch_decode(output.predictions, skip_special_tokens=True)
-    ocr_result = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_result))
-    sub = pd.read_csv("data/sample_submission.csv")
-    sub[RawDataColumns.label] = ocr_result
-    sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(clean_text)
-    if not os.path.exists("sub"):
-        os.mkdir("sub")
-    csv_name = time.strftime("%Y-%H-%M-%S") + ".csv"
-    sub.to_csv(os.path.join("sub", csv_name), index=False)
+    output = trainer.predict(test_dataset.select([0]), output_scores=True, return_dict_in_generate=True)
+    print(output)
+    # model.to("cuda")
+    # for test_data in test_loader:
+    #     output = model.generate(
+    #         **test_data.to("cuda"), output_scores=True, num_beams=config.num_beams, return_dict_in_generate=True
+    #     )
+    #     print(output)
+    #     break
+    # ocr_result = processor.tokenizer.batch_decode(output.predictions, skip_special_tokens=True)
+    # ocr_result = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_result))
+    # sub = pd.read_csv("data/sample_submission.csv")
+    # sub[RawDataColumns.label] = ocr_result
+    # sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(clean_text)
+    # if not os.path.exists(training_args.output_dir):
+    #     os.mkdir(training_args.output_dir)
+    # csv_name = time.strftime("%Y-%H-%M-%S") + ".csv"
+    # sub.to_csv(os.path.join(training_args.output_dir, csv_name), index=False)
 
     pass
 

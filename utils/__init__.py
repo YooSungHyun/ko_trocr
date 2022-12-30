@@ -1,1 +1,1 @@
-from utils.data_collator import DataCollatorForOCR
+from utils.data_collators import DataCollatorForGptOCR, DataCollatorForOCR
