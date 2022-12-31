@@ -103,10 +103,10 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     # set beam search parameters
     config.eos_token_id = tokenizer.sep_token_id if tokenizer.sep_token_id is not None else tokenizer.eos_token_id
     config.max_length = 32  # arg로 받을 수 있게 수정 "snunlp/KR-BERT-char16424"의 경우 최대 길이가 16, 넉넉히 32를 주면 될듯?
-    config.early_stopping = True
+    #config.early_stopping = True
     # config.no_repeat_ngram_size = 3
     # config.length_penalty = 2.0
-    config.num_beams = 5
+    config.num_beams = 10
 
     # encoder_add_pooling_layer=False
     # https://github.com/huggingface/transformers/issues/7924 ddp 관련
@@ -126,10 +126,11 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         data_collator = DataCollatorForOCR(processor=ocr_processor)
 
     # 로깅 스텝 설정 -> 한 에폭에 5번
+    # 세이브 스텝 -> 한 에폭에 2번
     total_batch = training_args.train_batch_size * training_args.gradient_accumulation_steps * NUM_GPU
     one_epoch_len = len(train_dataset) // total_batch
-    training_args.eval_steps = one_epoch_len // 5
-    training_args.save_steps = one_epoch_len // 5
+    training_args.eval_steps = one_epoch_len // 2
+    training_args.save_steps = one_epoch_len // 2
     training_args.logging_steps = one_epoch_len // 10
 
     if training_args.local_rank == 0:

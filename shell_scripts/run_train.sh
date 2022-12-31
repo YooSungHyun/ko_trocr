@@ -3,7 +3,7 @@ GPU_IDS="0,1,2,3"
 export OMP_NUM_THREADS=8
 vision_model_name_or_path="microsoft/swinv2-large-patch4-window12-192-22k"
 text_model_name_or_path="snunlp/KR-BERT-char16424"
-for i in 0 1 2 3 4
+for i in 0
 do 
 CUDA_VISIBLE_DEVICES=$GPU_IDS \
 python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
@@ -26,7 +26,7 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --learning_rate 5e-5 \
     --dataloader_num_workers "4" \
     --wandb_project "dacon_kyowon" \
-    --wandb_name "${i}-swin(p4,large)-bert-base(do aug)" \
+    --wandb_name "${i}-aug(0.75)-rotate(0.75)" \
     --wandb_entity "tadev" \
     --label_names "labels" \
     --metric_for_best_model "accuracy" \

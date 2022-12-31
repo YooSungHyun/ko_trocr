@@ -82,7 +82,7 @@ def has_unk_token(
     return has_unk
 
 
-def compute_metrics(pred: EvalPrediction, processor: TrOCRProcessor) -> Dict[str:float]:
+def compute_metrics(pred: EvalPrediction, processor: TrOCRProcessor) -> Dict[str,float]:
     labels_ids = pred.label_ids
     pred_ids = pred.predictions
     labels_ids[labels_ids == -100] = processor.tokenizer.pad_token_id
