@@ -20,7 +20,7 @@ def clean_text(text: str) -> str:
     텍스트의 자모 및 공백을 삭제
     ex) "바ㄴ나 나" -> "바나나"
     """
-    text = re.sub(r"[ㄱ-ㅎㅏ-ㅣ ]", "", text)
+    text = re.sub(r"[^가-힣]", "", text)
     return text
 
 
