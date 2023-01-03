@@ -20,6 +20,7 @@ from utils import DataCollatorForOCR
 from utils.augmentation import augmentation
 from utils.dataset_utils import get_dataset
 from utils.training_utils import compute_metrics, seed_everything
+from utils.augmentation import augmentation, sharpening
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -57,11 +58,11 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
 
     # set beam search parameters
     config.eos_token_id = ocr_processor.tokenizer.sep_token_id
-    config.max_length = 64
-    config.early_stopping = True
-    config.no_repeat_ngram_size = 3
-    config.length_penalty = 2.0
-    config.num_beams = 5
+    config.max_length = 32
+    # config.early_stopping = True
+    # config.no_repeat_ngram_size = 3
+    # config.length_penalty = 2.0
+    config.num_beams = 10
 
     # config.save_pretrained(training_args.output_dir)
 
@@ -77,11 +78,11 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     # 데이터 콜레이터 로드
     data_collator = DataCollatorForOCR(processor=ocr_processor)
 
-    # 로깅 스텝 설정 -> 한 에폭에 5번
+    # 로깅 스텝 설정 -> 한 에폭에 2번
     total_batch = training_args.train_batch_size * training_args.gradient_accumulation_steps * NUM_GPU
     one_epoch_len = len(train_dataset) // total_batch
-    training_args.eval_steps = one_epoch_len // 5
-    training_args.save_steps = one_epoch_len // 5
+    training_args.eval_steps = one_epoch_len // 2
+    training_args.save_steps = one_epoch_len // 2
     training_args.logging_steps = one_epoch_len // 10
 
     if training_args.local_rank == 0:
