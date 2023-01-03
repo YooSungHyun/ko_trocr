@@ -1,0 +1,13 @@
+bert="snunlp/KR-BERT-char16424"
+"google/vit-base-patch16-224-in21k"
+"google/vit-base-patch32-224-in21k"
+"microsoft/swin-base-patch4-window7-224-in22k"
+"microsoft/swinv2-large-patch4-window12-192-22k"
+
+4. encoder vit patch16, beam5  -> 0.784133837
+5. encoder vit patch16, beam10 -> 0.7844486418
+
+6. encoder swin-base-patch4, beam10 -> 0.82631
+7. encoder swinv2-large-patch4-window12-192, beam10 -> 0.86485
+8. 8.csv: 7번과 같은 모델 + 10에폭 + augmentation beam10 -> 0.91297
+9. 8번과 동일한 데이터 aug, + no_repeat_ngram_size, length_penalty 를 defalut로 변경 + kfold  (동점처리 안되어 있음)

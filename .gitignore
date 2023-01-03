@@ -133,3 +133,5 @@ output/
 data/
 wandb/
 *.csv
+sub/
+kfold_sub/

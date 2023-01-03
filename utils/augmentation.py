@@ -80,7 +80,6 @@ class Custom_GlassBlur(GlassBlur):
 
 shake_aug = [DefocusBlur(), MotionBlur(), Custom_GlassBlur()]
 resolution_aug = [Pixelate(), GaussianBlur(), GaussianNoise(), JpegCompression()]
-# contrast = Contrast()
 rotate = Custom_Rotate(square_side=192)
 
 
