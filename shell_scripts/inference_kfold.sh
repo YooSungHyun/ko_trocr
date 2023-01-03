@@ -1,6 +1,6 @@
 NUM_GPU=1
 export OMP_NUM_THREADS=8
-for i in 4
+for i in 0 1 2 3 4
 do 
 GPU_IDS=0 \
 CUDA_VISIBLE_DEVICES=$GPU_IDS \

@@ -1,16 +1,16 @@
 import random
 
-from straug.blur import DefocusBlur, GaussianBlur, MotionBlur, GlassBlur
-from skimage.filters import gaussian
-from straug.camera import Pixelate, JpegCompression
-from straug.noise import GaussianNoise
-from straug.geometry import Rotate
-
-from literal import DatasetColumns
+import cv2
 import numpy as np
 from PIL import Image
+from skimage.filters import gaussian
+from straug.blur import DefocusBlur, GaussianBlur, GlassBlur, MotionBlur
+from straug.camera import JpegCompression, Pixelate
+from straug.geometry import Rotate
+from straug.noise import GaussianNoise
 from torchvision.transforms import Compose
-import cv2
+
+from literal import DatasetColumns
 
 
 class Custom_Rotate(Rotate):
@@ -105,6 +105,11 @@ def augmentation(raw):
         raw[DatasetColumns.pixel_values] = [
             string_augs(image.convert("RGB")) for image in raw[DatasetColumns.pixel_values]
         ]
+    # if random.random() < 0.75:
+    #     rand_idx = random.randint(0, len(string_augs) - 1)
+    #     raw[DatasetColumns.pixel_values] = [
+    #         rotate(image.convert("RGB")) for image in raw[DatasetColumns.pixel_values]
+    #     ]
     return raw
 
 

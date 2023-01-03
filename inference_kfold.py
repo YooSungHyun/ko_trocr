@@ -1,6 +1,7 @@
 import os
 import time
 import unicodedata
+from pprint import pprint
 
 import pandas as pd
 import torch
@@ -22,6 +23,7 @@ from utils.dataset_utils import clean_text, get_dataset
 
 def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_args: MyTrainingArguments):
     test_dataset = get_dataset(dataset_args.test_csv_path)
+    #test_dataset = test_dataset.select(list(range(10)))
     processor = TrOCRProcessor.from_pretrained(model_args.model_name_or_path)
     config = AutoConfig.from_pretrained(model_args.model_name_or_path)
     config.num_beams = training_args.generation_num_beams
@@ -43,27 +45,60 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     model.to("cuda")
     preds = []
     scores = []
+    num_return_sequences = 5
     for test_data in tqdm(test_loader, total=len(test_dataset) // training_args.per_device_eval_batch_size + 1):
-        output = model.generate(**test_data.to("cuda"), output_scores=True, return_dict_in_generate=True)
+        output = model.generate(**test_data.to("cuda"), output_scores=True, return_dict_in_generate=True,num_return_sequences=num_return_sequences)
         preds.append(output.sequences.to("cpu"))
         scores.append(output.sequences_scores.to("cpu"))
 
-    # print(preds)
-    # print(scores)
-
-    #     break
-    labels = []
-    seq_scores = []
+    total_beam_sequences = []
+    #pprint(scores)
     for pred in preds:
-        ocr_result = processor.tokenizer.batch_decode(pred, skip_special_tokens=True)
-        ocr_result = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_result))
-        labels.extend(ocr_result)
+        batch, length = pred.shape
+        pred = pred.view(-1,num_return_sequences,length)
+        total_beam_sequences.append(pred)
+
+    total_beam_scores = []
     for score in scores:
-        seq_scores.extend(score.tolist())
+        score = score.view(-1, num_return_sequences)
+        total_beam_scores.append(score)
+
+
+    #pprint(total_beam_sequences)
+
+    ocr_results_list = []
+    ocr_probs_list = []
+    for batch_beam_sequences,batch_beam_scores in zip(total_beam_sequences, total_beam_scores):
+        for beam_sequences_per_img, beam_scores_per_img in zip(batch_beam_sequences, batch_beam_scores):
+            ocr_results = processor.tokenizer.batch_decode(beam_sequences_per_img, skip_special_tokens=True)
+            ocr_results = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_results))
+            ocr_results = list(map(lambda x: clean_text(x), ocr_results))
+            beam_scores_per_img = torch.exp(beam_scores_per_img)
+            ocr_scores = beam_scores_per_img.tolist()
+            ocr_results_list.append(ocr_results)
+            ocr_probs_list.append(ocr_scores)
+
+            #result = '\n'.join(ocr_results)
+            # print(result)
+            # print('**')
+
+    # pprint(ocr_results_list)
+    # pprint(ocr_probs_list)
+        
+
+    # #     break
+    # labels = []
+    # seq_scores = []
+    # for pred in preds:
+    #     ocr_result = processor.tokenizer.batch_decode(pred, skip_special_tokens=True)
+    #     ocr_result = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_result))
+    #     labels.extend(ocr_result)
+    # for score in scores:
+    #     seq_scores.extend(score.tolist())
     sub = pd.read_csv("data/sample_submission.csv")
-    sub[RawDataColumns.label] = labels
-    sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(clean_text)
-    sub["seq_scores"] = seq_scores
+    sub[RawDataColumns.label] = ocr_results_list
+    #sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(clean_text)
+    sub["seq_probs"] = ocr_probs_list
     if not os.path.exists(training_args.output_dir):
         os.mkdir(training_args.output_dir)
     csv_name = time.strftime("%Y-%H-%M-%S") + fold_name +".csv"
