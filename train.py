@@ -19,6 +19,8 @@ from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
 from utils import DataCollatorForGptOCR, DataCollatorForOCR
 from utils.augmentation import augmentation
 from utils.dataset_utils import get_dataset
+from utils.training_utils import compute_metrics, seed_everything
+from utils.augmentation import augmentation, sharpening
 from utils.training_utils import (
     add_label_tokens,
     compute_metrics,
@@ -107,6 +109,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     # config.no_repeat_ngram_size = 3
     # config.length_penalty = 2.0
     config.num_beams = 10
+
 
     # encoder_add_pooling_layer=False
     # https://github.com/huggingface/transformers/issues/7924 ddp 관련
