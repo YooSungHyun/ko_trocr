@@ -1,4 +1,5 @@
 import random
+from typing import Any, Callable, Dict, List
 
 import cv2
 import numpy as np
@@ -7,8 +8,9 @@ from skimage.filters import gaussian
 from straug.blur import DefocusBlur, GaussianBlur, GlassBlur, MotionBlur
 from straug.camera import JpegCompression, Pixelate
 from straug.geometry import Rotate
-from straug.noise import GaussianNoise
-from torchvision.transforms import Compose
+from straug.noise import GaussianNoise, ShotNoise
+from straug.process import AutoContrast,Sharpness
+from torchvision.transforms import ColorJitter, Compose, Grayscale, ToTensor
 
 from literal import DatasetColumns
 
@@ -78,50 +80,55 @@ class Custom_GlassBlur(GlassBlur):
         return Image.fromarray(img.astype(np.uint8))
 
 
-shake_aug = [DefocusBlur(), MotionBlur(), Custom_GlassBlur()]
-resolution_aug = [Pixelate(), GaussianBlur(), GaussianNoise(), JpegCompression()]
-rotate = Custom_Rotate(square_side=192)
+class Augmentator:
+    def __init__(
+        self, aug_with_compose_prob: float = 0.8, rotation_prob: float = 0.5, rotation_square_side: int = 192
+    ):
+        self.__white_rgb = [255, 255, 255]
+        self.shake_aug = [DefocusBlur(), MotionBlur(), Custom_GlassBlur()]
+        self.resolution_aug = [Pixelate(), GaussianBlur(), JpegCompression(), AutoContrast(),Sharpness()]
+        self.noise_aug = [Compose([GaussianNoise(),Grayscale(num_output_channels=3)])]
+        self.rotate = Custom_Rotate(square_side=rotation_square_side)
+        self.__rotation_prob = rotation_prob
+        self.__aug_with_compose_prob = aug_with_compose_prob
 
+    def augmentation(self, raw: Dict[str, Any]):
+        if random.random() < self.__rotation_prob:
+            raw[DatasetColumns.pixel_values] = self.__rotate_with_white_background(raw=raw)
+        if random.random() < self.__aug_with_compose_prob:
+            string_augs = self.__aug_with_compose()
+            raw[DatasetColumns.pixel_values] = [
+                string_augs(image.convert("RGB")) for image in raw[DatasetColumns.pixel_values]
+            ]
+        return raw
 
-def augmentation(raw):
-    white_rgb = [255, 255, 255]
-    rotate_random = random.random()
-    if rotate_random > 0.5:
+    def __rotate_with_white_background(self, raw: Dict[str, Any]) -> Image:
         rotate_result = list()
         for image in raw[DatasetColumns.pixel_values]:
-            angle_chk_image = Image.fromarray(np.full((image.size[0], image.size[1], 3), white_rgb, dtype=np.uint8))
-            rot_image, rot_angle_chk_image = rotate(image.convert("RGB"), angle_chk_image)
+            angle_chk_image = Image.fromarray(
+                np.full((image.size[0], image.size[1], 3), self.__white_rgb, dtype=np.uint8)
+            )
+            rot_image, rot_angle_chk_image = self.rotate(image.convert("RGB"), angle_chk_image)
             rot_image = np.array(rot_image)
-            row_col_space = np.where(np.all(np.array(rot_angle_chk_image) != np.array(white_rgb), axis=-1))
+            row_col_space = np.where(np.all(np.array(rot_angle_chk_image) != np.array(self.__white_rgb), axis=-1))
             for row, col in zip(row_col_space[0], row_col_space[1]):
-                rot_image[row][col] = white_rgb
+                rot_image[row][col] = self.__white_rgb
             rotate_result.append(Image.fromarray(rot_image))
-        raw[DatasetColumns.pixel_values] = rotate_result
-    aug_choice = random.random()
-    if aug_choice > 0.2:
-        shake_idx = random.randint(0, len(shake_aug) - 1)
-        resolution_idx = random.randint(0, len(resolution_aug) - 1)
-        string_augs = Compose([resolution_aug[resolution_idx], shake_aug[shake_idx]])
-        raw[DatasetColumns.pixel_values] = [
-            string_augs(image.convert("RGB")) for image in raw[DatasetColumns.pixel_values]
-        ]
-    # if random.random() < 0.75:
-    #     rand_idx = random.randint(0, len(string_augs) - 1)
-    #     raw[DatasetColumns.pixel_values] = [
-    #         rotate(image.convert("RGB")) for image in raw[DatasetColumns.pixel_values]
-    #     ]
-    return raw
+        return rotate_result
 
+    def __aug_with_compose(self) -> Callable:
+        """
+        Edit by Cleaning
+        """
+        shake_idx = random.randint(0, len(self.shake_aug) - 1)
+        resolution_idx = random.randint(0, len(self.resolution_aug) - 1)
+        noise_idx = random.randint(0, len(self.noise_aug) - 1)
 
-def sharpening(raw):
-    sharpening_result = list()
-    for image in raw[DatasetColumns.pixel_values]:
-        img = np.array(image)
-        img_ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-        img_f = img_ycrcb[:, :, 0].astype(np.float32)
-        img_blr = cv2.GaussianBlur(img_f, (0, 0), 2.0)
-        img_ycrcb[:, :, 0] = np.clip(2.0 * img_f - img_blr, 0, 255).astype(np.uint8)
-        dst = cv2.cvtColor(img_ycrcb, cv2.COLOR_YCrCb2BGR)
-        sharpening_result.append(Image.fromarray(dst))
-    raw[DatasetColumns.pixel_values] = [Image.fromarray(dst)]
-    return raw
+        noise_prob = random.random()
+        if noise_prob < 0.5:
+            string_augs = Compose([self.resolution_aug[resolution_idx], self.shake_aug[shake_idx]])
+        else:
+            string_augs = Compose([self.resolution_aug[resolution_idx], self.shake_aug[shake_idx],self.noise_aug[noise_idx]])
+
+        
+        return string_augs

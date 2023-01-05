@@ -42,6 +42,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     )
 
     model.to("cuda")
+    model.eval()
     preds = []
     scores = []
     num_return_sequences = 5

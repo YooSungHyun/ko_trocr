@@ -17,10 +17,8 @@ from transformers.trainer_utils import is_main_process
 
 from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
 from utils import DataCollatorForGptOCR, DataCollatorForOCR
-from utils.augmentation import augmentation
+from utils.augmentation import Augmentator
 from utils.dataset_utils import get_dataset
-from utils.training_utils import compute_metrics, seed_everything
-from utils.augmentation import augmentation, sharpening
 from utils.training_utils import (
     add_label_tokens,
     compute_metrics,
@@ -46,13 +44,16 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     if text_model_name == "snunlp/KR-BERT-char16424":
         is_sub_char = True
 
+    image_processor = AutoImageProcessor.from_pretrained(vision_model_name)
+
+    augmentator = Augmentator(
+        aug_with_compose_prob=0.8, rotation_prob=0.5, rotation_square_side=min(image_processor.size.values())
+    )  # min? max?
     train_dataset = get_dataset(dataset_args.train_csv_path, is_sub_char=is_sub_char)
-    train_dataset.set_transform(augmentation)
+    train_dataset.set_transform(augmentator.augmentation)
     valid_dataset = get_dataset(dataset_args.valid_csv_path, is_sub_char=is_sub_char)
 
     # 모델, 컨피그 ,프로세서 로드
-
-    image_processor = AutoImageProcessor.from_pretrained(vision_model_name)
 
     if "gpt" in text_model_name:
         # print("in")
@@ -65,7 +66,6 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
             mask_token="<mask>",
         )
     else:
-        print("in")
         tokenizer = AutoTokenizer.from_pretrained(text_model_name)
 
     # label에 unk 토큰이 있으면 vocab에 추가시켜줌
@@ -105,11 +105,10 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     # set beam search parameters
     config.eos_token_id = tokenizer.sep_token_id if tokenizer.sep_token_id is not None else tokenizer.eos_token_id
     config.max_length = 32  # arg로 받을 수 있게 수정 "snunlp/KR-BERT-char16424"의 경우 최대 길이가 16, 넉넉히 32를 주면 될듯?
-    #config.early_stopping = True
+    # config.early_stopping = True
     # config.no_repeat_ngram_size = 3
     # config.length_penalty = 2.0
     config.num_beams = 10
-
 
     # encoder_add_pooling_layer=False
     # https://github.com/huggingface/transformers/issues/7924 ddp 관련
@@ -158,6 +157,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     )
 
     trainer.train()
+
     if training_args.local_rank == 0:
         model.save_pretrained(training_args.output_dir)
         config.save_pretrained(training_args.output_dir)

@@ -1,16 +1,15 @@
-NUM_GPU=1
 export OMP_NUM_THREADS=8
-for i in 4
+for gpu in 0 1 2 3 
 do 
-GPU_IDS=0 \
-CUDA_VISIBLE_DEVICES=$GPU_IDS \
-python inference_kfold.py \
+CUDA_VISIBLE_DEVICES=$gpu \
+python inference_kfold2.py \
     --output_dir "kfold_sub" \
     --seed 42 \
     --test_csv_path "data/preprocess/test.csv" \
     --generation_num_beams "10" \
     --model_name_or_path "output/fold${i}" \
     --per_device_eval_batch_size "64" \
-    --dataloader_num_workers "8" \
-    --predict_with_generate "True" 
+    --dataloader_num_workers "4" \
+    --predict_with_generate "True" \
+    &
 done
