@@ -86,8 +86,7 @@ class Augmentator:
     ):
         self.__white_rgb = [255, 255, 255]
         self.shake_aug = [DefocusBlur(), MotionBlur(), Custom_GlassBlur()]
-        self.resolution_aug = [Pixelate(), GaussianBlur(), JpegCompression(), AutoContrast(),Sharpness()]
-        self.noise_aug = [Compose([GaussianNoise(),Grayscale(num_output_channels=3)])]
+        self.resolution_aug = [Pixelate(), GaussianBlur(),Compose([GaussianNoise(),Grayscale(num_output_channels=3)]),JpegCompression()]
         self.rotate = Custom_Rotate(square_side=rotation_square_side)
         self.__rotation_prob = rotation_prob
         self.__aug_with_compose_prob = aug_with_compose_prob
@@ -122,13 +121,5 @@ class Augmentator:
         """
         shake_idx = random.randint(0, len(self.shake_aug) - 1)
         resolution_idx = random.randint(0, len(self.resolution_aug) - 1)
-        noise_idx = random.randint(0, len(self.noise_aug) - 1)
-
-        noise_prob = random.random()
-        if noise_prob < 0.5:
-            string_augs = Compose([self.resolution_aug[resolution_idx], self.shake_aug[shake_idx]])
-        else:
-            string_augs = Compose([self.resolution_aug[resolution_idx], self.shake_aug[shake_idx],self.noise_aug[noise_idx]])
-
-        
+        string_augs = Compose([self.resolution_aug[resolution_idx], self.shake_aug[shake_idx]])
         return string_augs
