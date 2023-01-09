@@ -40,6 +40,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     )
 
     model.to("cuda")
+    model.eval()
     preds = []
     scores = []
     num_return_sequences = 5
@@ -77,6 +78,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
             ocr_probs_list.append(ocr_scores)
 
     sub = pd.read_csv("data/sample_submission.csv")
+
     sub[RawDataColumns.label] = ocr_results_list
     sub["seq_probs"] = ocr_probs_list
     if not os.path.exists(training_args.output_dir):
