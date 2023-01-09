@@ -1,16 +1,14 @@
 import random
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict
 
-import cv2
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
 from straug.blur import DefocusBlur, GaussianBlur, GlassBlur, MotionBlur
 from straug.camera import JpegCompression, Pixelate
 from straug.geometry import Rotate
-from straug.noise import GaussianNoise, ShotNoise
-from straug.process import AutoContrast,Sharpness
-from torchvision.transforms import ColorJitter, Compose, Grayscale, ToTensor
+from straug.noise import GaussianNoise
+from torchvision.transforms import Compose, Grayscale
 
 from literal import DatasetColumns
 
@@ -86,7 +84,12 @@ class Augmentator:
     ):
         self.__white_rgb = [255, 255, 255]
         self.shake_aug = [DefocusBlur(), MotionBlur(), Custom_GlassBlur()]
-        self.resolution_aug = [Pixelate(), GaussianBlur(),Compose([GaussianNoise(),Grayscale(num_output_channels=3)]),JpegCompression()]
+        self.resolution_aug = [
+            Pixelate(),
+            GaussianBlur(),
+            Compose([GaussianNoise(), Grayscale(num_output_channels=3)]),
+            JpegCompression(),
+        ]
         self.rotate = Custom_Rotate(square_side=rotation_square_side)
         self.__rotation_prob = rotation_prob
         self.__aug_with_compose_prob = aug_with_compose_prob
@@ -119,7 +122,7 @@ class Augmentator:
         """
         Edit by Cleaning
         """
-        shake_idx = random.randint(0, len(self.shake_aug) - 1)
         resolution_idx = random.randint(0, len(self.resolution_aug) - 1)
+        shake_idx = random.randint(0, len(self.shake_aug) - 1)
         string_augs = Compose([self.resolution_aug[resolution_idx], self.shake_aug[shake_idx]])
         return string_augs
