@@ -11,4 +11,4 @@ class ModelArguments:
     decoder_model_name_or_path: str = field(default=None)
     model_name_or_path: str = field(default=None)
     num_beam: int = field(default=10)
-    max_lengths: int = field(default=32)
+    max_length: int = field(default=32)
