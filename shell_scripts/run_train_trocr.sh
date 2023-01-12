@@ -36,10 +36,3 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU --master_port $PORT
     --predict_with_generate "True" \
     --fp16
 done 
-
-
-# "microsoft/swinv2-tiny-patch4-window8-256" -> 별로...
-
-#"microsoft/swin-base-patch4-window7-224-in22k" -> 베스트
-
-# "microsoft/swinv2-large-patch4-window12-192-22k"

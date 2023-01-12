@@ -40,7 +40,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(clean_text)
     if not os.path.exists(training_args.output_dir):
         os.mkdir(training_args.output_dir)
-    csv_name = time.strftime("%Y-%H-%M-%S") + ".csv"
+    csv_name = time.strftime("%Y-%m-%d-%H-%M") + ".csv"
     sub.to_csv(os.path.join(training_args.output_dir, csv_name), index=False)
 
     pass
