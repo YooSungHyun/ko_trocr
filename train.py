@@ -131,8 +131,9 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     # 세이브 스텝 -> 한 에폭에 2번
     total_batch = training_args.train_batch_size * training_args.gradient_accumulation_steps * NUM_GPU
     one_epoch_len = len(train_dataset) // total_batch
-    training_args.eval_steps = one_epoch_len // 2
-    training_args.save_steps = one_epoch_len // 2
+    total_steps = training_args.num_train_epochs * one_epoch_len
+    training_args.eval_steps = total_steps // 10
+    training_args.save_steps = total_steps // 10
     training_args.logging_steps = one_epoch_len // 10
 
     if training_args.local_rank == 0:

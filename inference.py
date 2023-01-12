@@ -44,7 +44,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         "output_scores": True,
         "return_dict_in_generate": True,
     }
-    output = trainer.predict(test_dataset.select(list(range(64 * 4))), gen_kwargs=gen_kwargs)  ##
+    output = trainer.predict(test_dataset)  ##
     ocr_result = processor.tokenizer.batch_decode(output.predictions, skip_special_tokens=True)
     ocr_result = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_result))
     sub = pd.read_csv(dataset_args.submission_csv_path)
@@ -52,7 +52,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     sub[RawDataColumns.label] = sub[RawDataColumns.label].apply(clean_text)
     if not os.path.exists(training_args.output_dir):
         os.mkdir(training_args.output_dir)
-    csv_name = time.strftime("%Y-%H-%M-%S") + ".csv"
+    csv_name = time.strftime("%Y-%m-%d-%H-%M") + ".csv"
     sub.to_csv(os.path.join(training_args.output_dir, csv_name), index=False)
 
     pass
