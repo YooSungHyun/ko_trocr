@@ -20,7 +20,7 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --evaluation_strategy "epoch" \
     --save_strategy "epoch" \
     --logging_strategy "steps" \
-    --logging_steps "100" \ 
+    --logging_steps "100" \
     --load_best_model_at_end \
     --save_total_limit 2 \
     --load_best_model_at_end \
