@@ -3,8 +3,6 @@ import time
 import unicodedata
 
 import pandas as pd
-import torch
-from torch.utils.data import DataLoader
 from transformers import (
     AutoConfig,
     HfArgumentParser,
@@ -16,18 +14,14 @@ from transformers import (
 from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
 from literal import RawDataColumns
 from utils import DataCollatorForOCR
-from utils.augmentation import Augmentator
 from utils.dataset_utils import clean_text, get_dataset
 
 
 def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_args: MyTrainingArguments):
     test_dataset = get_dataset(dataset_args.test_csv_path)
-    # test_dataset.set_transform(sharpening)
     processor = TrOCRProcessor.from_pretrained(model_args.model_name_or_path)
     config = AutoConfig.from_pretrained(model_args.model_name_or_path)
     config.num_beams = training_args.generation_num_beams
-    # config.no_repeat_ngram_size = 3
-    # config.length_penalty = 2.0
 
     model = VisionEncoderDecoderModel.from_pretrained(model_args.model_name_or_path, config=config)
     data_collator = DataCollatorForOCR(processor=processor)
@@ -37,14 +31,8 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         data_collator=data_collator,
         args=training_args,
     )
-    gen_kwargs = {
-        "num_beams": training_args.generation_num_beams,
-        "do_sample": True,
-        "num_beam_groups": 1,
-        "output_scores": True,
-        "return_dict_in_generate": True,
-    }
-    output = trainer.predict(test_dataset)  ##
+    gen_kwargs = {"num_beams": training_args.generation_num_beams}
+    output = trainer.predict(test_dataset, **gen_kwargs)
     ocr_result = processor.tokenizer.batch_decode(output.predictions, skip_special_tokens=True)
     ocr_result = list(map(lambda x: unicodedata.normalize("NFC", x), ocr_result))
     sub = pd.read_csv(dataset_args.submission_csv_path)

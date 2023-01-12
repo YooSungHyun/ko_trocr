@@ -17,9 +17,10 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --gradient_accumulation_steps 4\
     --encoder_model_name_or_path ${vision_model_name_or_path} \
     --decoder_model_name_or_path ${text_model_name_or_path} \
-    --evaluation_strategy "steps" \
-    --save_strategy "steps" \
+    --evaluation_strategy "epoch" \
+    --save_strategy "epoch" \
     --logging_strategy "steps" \
+    --logging_steps "100" \ 
     --load_best_model_at_end \
     --save_total_limit 2 \
     --load_best_model_at_end \
@@ -32,13 +33,7 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --metric_for_best_model "accuracy" \
     --ddp_find_unused_parameters "True" \
     --predict_with_generate "True" \
+    --generation_num_beams "10" \
+    --generation_max_length "32" \
     --fp16
 done 
-
-
-# "microsoft/swinv2-tiny-patch4-window8-256" -> 별로...
-
-#"microsoft/swin-base-patch4-window7-224-in22k" 
-
-# "microsoft/swinv2-large-patch4-window12-192-22k"-> 베스트
-# "microsoft/swinv2-large-patch4-window12to24-192to384-22kto1k-ft" -> 해볼것
