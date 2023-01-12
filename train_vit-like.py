@@ -39,7 +39,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         2) setting config
             2-1) load config & set config
             2-2) set config for beam search
-        3) load dataset with agumentation & load datacollator
+        3) load dataset with augmentation & load datacollator
         4) load model
         5) load trainer and train
         6) save model with config and processor
@@ -71,7 +71,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     config.num_beams = training_args.generation_num_beams
     ################################################################################################################
 
-    # 3) load dataset with agumentation & load datacollator ####################################################
+    # 3) load dataset with augmentation & load datacollator ####################################################
     augmentator = Augmentator(
         aug_with_compose_prob=0.8, rotation_prob=0.5, rotation_square_side=max(image_processor.size.values())
     )
