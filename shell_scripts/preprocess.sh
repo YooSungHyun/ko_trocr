@@ -1,3 +1,5 @@
+unzip data/open.zip -d data/
+
 python preprocess.py \
     --train_csv_path "data/train.csv" \
     --test_csv_path "data/test.csv" \

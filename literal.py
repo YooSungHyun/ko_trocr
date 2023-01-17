@@ -21,6 +21,8 @@ class RawDataColumns:
     """label"""
     length = "length"
     """length"""
+    seq_probs = "seq_probs"
+    """seq_probs"""
 
 
 @dataclass

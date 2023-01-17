@@ -130,7 +130,9 @@ dmypy.json
 
 *.ipynb
 output/
-data/
+data/open.zip
+data/test
+data/train
 wandb/
 *.csv
 sub/
