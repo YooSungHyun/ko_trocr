@@ -48,6 +48,7 @@ $ pip install --upgrade pip
 $ pip install -r requirements.txt
 ```
 ### 3. unzip & preprocess data
+프로젝트 root dir에서 스크립트 입력
 ```
 # 먼저, (데이터 압축파일) open.zip이 data경로 밑에 있어야 합니다!
 $ bash shell_scripts/preprocess.sh
@@ -55,11 +56,13 @@ $ bash shell_scripts/preprocess.sh
 
 ## Reproduction of results
 ## train models
+프로젝트 root dir에서 스크립트 입력
 ```
 $ bash shell_scripts/run_train_ensemble.sh
 ```
 
 ## kfold inference & make result
+프로젝트 root dir에서 스크립트 입력
 ```
 $ bash sheell_scripts/generate_result.sh
 ```
