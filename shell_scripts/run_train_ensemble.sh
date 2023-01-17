@@ -19,10 +19,10 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --gradient_accumulation_steps 2 \
     --encoder_model_name_or_path ${vision_model_name_or_path} \
     --decoder_model_name_or_path ${text_model_name_or_path} \
-    --evaluation_strategy "no" \
-    --save_strategy "no" \
+    --evaluation_strategy "epoch" \
+    --save_strategy "epoch" \
     --logging_strategy "steps" \
-    --logging_steps "1" \
+    --logging_steps "100" \
     --save_total_limit 2 \
     --load_best_model_at_end \
     --learning_rate 5e-5 \
@@ -30,7 +30,7 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --label_names "labels" \
     --metric_for_best_model "accuracy" \
     --predict_with_generate "True" \
-    --generation_num_beams "1" \
+    --generation_num_beams "10" \
     --generation_max_length "32" \
     --fp16
 done 
@@ -50,10 +50,10 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --gradient_accumulation_steps 2 \
     --encoder_model_name_or_path ${vision_model_name_or_path} \
     --decoder_model_name_or_path ${text_model_name_or_path} \
-    --evaluation_strategy "no" \
-    --save_strategy "no" \
+    --evaluation_strategy "epoch" \
+    --save_strategy "epoch" \
     --logging_strategy "steps" \
-    --logging_steps "1" \
+    --logging_steps "100" \
     --save_total_limit 2 \
     --load_best_model_at_end \
     --learning_rate 5e-5 \
