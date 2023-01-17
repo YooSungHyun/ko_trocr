@@ -49,6 +49,7 @@ $ pip install -r requirements.txt
 ```
 ### 3. unzip & preprocess data
 ```
+# 먼저, (데이터 압축파일) open.zip이 data경로 밑에 있어야 합니다!
 $ bash shell_scripts/preprocess.sh
 ```
 
