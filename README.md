@@ -38,26 +38,27 @@ Ubuntu 18.04.6 LTS
 ## setting environments
 ### 1. make & activate venv
 ```
-& python3.8 -m venv .venv
-& source .venv/bin/activate
+$ python3.8 -m venv .venv
+$ source .venv/bin/activate
 ```
 ### 2. install requirements
 ```
-& pip install --upgrade pip
-& pip install -r requirements.txt
+$ sudo apt install libmagickwand-dev
+$ pip install --upgrade pip
+$ pip install -r requirements.txt
 ```
 ### 3. unzip & preprocess data
 ```
-& bash shell_scripts/preprocess.sh
+$ bash shell_scripts/preprocess.sh
 ```
 
 ## Reproduction of results
 ## train models
 ```
-& bash shell_scripts/run_train_ensemble.sh
+$ bash shell_scripts/run_train_ensemble.sh
 ```
 
 ## kfold inference & make result
 ```
-& bash sheell_scripts/generate_result.sh
+$ bash sheell_scripts/generate_result.sh
 ```
