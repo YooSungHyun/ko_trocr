@@ -60,7 +60,7 @@ $ bash shell_scripts/preprocess.sh
 ```
 $ bash shell_scripts/run_train_ensemble.sh
 ```
-프로젝트 root dir에 모델 경로 생
+프로젝트 root dir에 모델 경로 생성
 
 ## kfold inference & make result
 프로젝트 root dir에서 스크립트 입력
