@@ -44,6 +44,8 @@ def main(args):
         fold_train_df.to_csv(os.path.join(Folder.data_preprocess, train_csv_name))
         fold_valid_df.to_csv(os.path.join(Folder.data_preprocess, valid_csv_name))
 
+    del test_df[RawDataColumns.label]
+
     train_df.to_csv(os.path.join(Folder.data_preprocess, "train.csv"))
     test_df.to_csv(os.path.join(Folder.data_preprocess, "test.csv"))
 
