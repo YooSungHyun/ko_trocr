@@ -137,3 +137,5 @@ wandb/
 *.csv
 sub/
 kfold_sub/
+.ocr
+DeepSpeed
