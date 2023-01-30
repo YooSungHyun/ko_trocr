@@ -1,22 +1,24 @@
 NUM_GPU=4
 GPU_IDS="0,1,2,3"
-export OMP_NUM_THREADS=8
-export CUDA_LAUNCH_BLOCKING=1
-vision_model_name_or_path="microsoft/trocr-large-stage1"
+cores=`nproc`
+num_workers=4
+export OMP_NUM_THREADS=$(($cores-$num_workers))
+export WANDB_DISABLED=false
+vision_model_name_or_path="microsoft/trocr-large-handwritten"
 text_model_name_or_path="snunlp/KR-BERT-char16424"
 SEED=42 
 for i in 0
 do 
 CUDA_VISIBLE_DEVICES=$GPU_IDS \
-python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
+deepspeed train.py \
     --output_dir "output_${SEED}/fold${i}" \
     --seed 42 \
     --train_csv_path "data/preprocess/fold${i}_train.csv" \
     --valid_csv_path "data/preprocess/fold${i}_valid.csv" \
     --num_train_epochs 15 \
-    --per_device_train_batch_size 8 \
-    --per_device_eval_batch_size 8 \
-    --gradient_accumulation_steps 2 \
+    --per_device_train_batch_size 16 \
+    --per_device_eval_batch_size 16 \
+    --gradient_accumulation_steps 1 \
     --encoder_model_name_or_path ${vision_model_name_or_path} \
     --decoder_model_name_or_path ${text_model_name_or_path} \
     --evaluation_strategy "epoch" \
@@ -32,5 +34,11 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPU train.py \
     --predict_with_generate "True" \
     --generation_num_beams "1" \
     --generation_max_length "32" \
-    --fp16
+    --gradient_checkpointing True \
+    --ddp_find_unused_parameters True \
+    --fp16 \
+    --wandb_name "trocr-large-handwritten-fold${i}(no_aug)" \
+    --wandb_entity "tadev" \
+    --wandb_project "dacon_kyowon_final" \
+    --deepspeed "ds_config/zero2.json" 
 done 
