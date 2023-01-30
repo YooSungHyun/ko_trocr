@@ -5,14 +5,15 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 
 from literal import Folder, RawDataColumns
+from utils.dataset_utils import preprocess_img_path
 
 
 def main(args):
     train_df = pd.read_csv(args.train_csv_path)
     test_df = pd.read_csv(args.test_csv_path)
 
-    train_df[RawDataColumns.img_path] = train_df[RawDataColumns.img_path].apply(lambda x: x.replace("./", Folder.data))
-    test_df[RawDataColumns.img_path] = test_df[RawDataColumns.img_path].apply(lambda x: x.replace("./", Folder.data))
+    train_df[RawDataColumns.img_path] = train_df[RawDataColumns.img_path].apply(preprocess_img_path)
+    test_df[RawDataColumns.img_path] = test_df[RawDataColumns.img_path].apply(preprocess_img_path)
     # ./train/TRAIN_00000.png -> ./data/train/TRAIN_00000.png
 
     train_df[RawDataColumns.length] = train_df[RawDataColumns.label].str.len()

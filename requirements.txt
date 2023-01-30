@@ -65,3 +65,4 @@ Wand==0.6.11
 xxhash==3.2.0
 yarl==1.8.2
 cupy-cuda11xds
+matplotlib

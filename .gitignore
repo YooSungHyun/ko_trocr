@@ -139,3 +139,5 @@ sub/
 kfold_sub/
 .ocr
 DeepSpeed
+data/raw
+data/preprocess

@@ -11,6 +11,10 @@ class Folder:
     """
     data/preprocess/의 상대경로
     """
+    data_raw = "./data/raw/"
+    """
+    data/raw/의 상대경로
+    """
 
 
 @dataclass
