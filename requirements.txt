@@ -67,3 +67,4 @@ yarl==1.8.2
 cupy-cuda11x
 matplotlib
 wandb
+accelerate
