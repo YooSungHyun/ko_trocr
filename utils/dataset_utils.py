@@ -58,7 +58,7 @@ def get_dataset(csv_path: os.PathLike, is_sub_char=True) -> Dataset:
 
 
 def vector_to_text_png(array, width, height, save_folder_name, img_name):
-    save_path = f"./{save_folder_name}/{img_name}.png"
+    save_path = f"./{save_folder_name}/{img_name}.jpg"
     if os.path.exists(save_path) == False:
         px = 1 / plt.rcParams["figure.dpi"]  # inch to pixel
         fig = plt.figure(frameon=False, figsize=(width * px, height * px))
