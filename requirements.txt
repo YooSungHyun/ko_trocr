@@ -64,5 +64,6 @@ urllib3==1.26.14
 Wand==0.6.11
 xxhash==3.2.0
 yarl==1.8.2
-cupy-cuda11xds
+cupy-cuda11x
 matplotlib
+wandb
