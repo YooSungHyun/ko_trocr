@@ -3,10 +3,11 @@ import os
 import re
 from unicodedata import normalize
 
+import datasets
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from datasets import Dataset, Image
+from datasets import Dataset
 from PIL import Image
 from tqdm import tqdm
 
@@ -52,7 +53,7 @@ def get_dataset(csv_path: os.PathLike, is_sub_char=True) -> Dataset:
         data_dict[DatasetColumns.labels] = df[RawDataColumns.label].tolist()
 
     dataset = Dataset.from_dict(data_dict)
-    dataset = dataset.cast_column(DatasetColumns.pixel_values, Image())
+    dataset = dataset.cast_column(DatasetColumns.pixel_values, datasets.Image())
     return dataset
 
 
