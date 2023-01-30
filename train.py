@@ -44,7 +44,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         aug_with_compose_prob=0.8, rotation_prob=0.5, rotation_square_side=max(image_processor.size.values())
     )
     train_dataset = get_dataset(dataset_args.train_csv_path, is_sub_char=is_sub_char)
-    train_dataset.set_transform(augmentator.augmentation)
+    # train_dataset.set_transform(augmentator.augmentation)
     valid_dataset = get_dataset(dataset_args.valid_csv_path, is_sub_char=is_sub_char)
 
     """ Tokenizer and vocab process
@@ -75,6 +75,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     config = VisionEncoderDecoderConfig.from_encoder_decoder_configs(
         encoder_config=encoder_config, decoder_config=decoder_config
     )
+    config.hidden_size = max(encoder_config.hidden_size, decoder_config.hidden_size)  # for deepspeed
 
     # Step 4. Additional Config Setting ##########################################################################
     ocr_processor = TrOCRProcessor(image_processor=image_processor, tokenizer=tokenizer)
@@ -119,6 +120,14 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         eval_dataset=valid_dataset,
         args=training_args,
     )
+    if training_args.local_rank == 0:
+        import wandb
+
+        wandb.init(
+            project=training_args.wandb_project,
+            entity=training_args.wandb_entity,
+            name=training_args.wandb_name,
+        )
 
     trainer.train()
 
