@@ -1,6 +1,7 @@
 unzip data/raw/open.zip -d data/raw/
+cp data/raw/sample_submission.csv data/
 
-python convert_png.py 
+python convert_jpg.py 
 
 python preprocess.py \
     --train_csv_path "data/train.csv" \
