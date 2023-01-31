@@ -141,3 +141,4 @@ kfold_sub/
 DeepSpeed
 data/raw
 data/preprocess
+shell_scripts/
