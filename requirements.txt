@@ -68,3 +68,4 @@ cupy-cuda11x
 matplotlib
 wandb
 accelerate
+flake8
