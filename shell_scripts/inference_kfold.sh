@@ -1,4 +1,4 @@
-for i in 0 1 2 3 4
+for i in 0
 do 
 GPU_IDS="0" \
 CUDA_VISIBLE_DEVICES=$GPU_IDS \

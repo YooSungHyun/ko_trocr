@@ -101,6 +101,7 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         add_cross_attention=True,
         vocab_size=len(tokenizer),
         ignore_mismatched_sizes=True,
+        use_cache=True,
     )  # Model Key args MUST in from_pretrained time
 
     # Step 6. Set new VisionEncoderDecoderModel

@@ -15,7 +15,7 @@ deepspeed train.py \
     --seed 42 \
     --train_csv_path "data/preprocess/fold${i}_train.csv" \
     --valid_csv_path "data/preprocess/fold${i}_valid.csv" \
-    --num_train_epochs 15 \
+    --num_train_epochs 10 \
     --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 16 \
     --gradient_accumulation_steps 1 \
@@ -34,8 +34,6 @@ deepspeed train.py \
     --predict_with_generate "True" \
     --generation_num_beams "1" \
     --generation_max_length "32" \
-    --gradient_checkpointing True \
-    --ddp_find_unused_parameters True \
     --fp16 \
     --wandb_name "trocr-large-handwritten-fold${i}(no_aug)" \
     --wandb_entity "tadev" \

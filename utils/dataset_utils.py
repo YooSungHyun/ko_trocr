@@ -57,8 +57,8 @@ def get_dataset(csv_path: os.PathLike, is_sub_char=True) -> Dataset:
     return dataset
 
 
-def vector_to_text_png(array, width, height, save_folder_name, img_name):
-    save_path = f"./{save_folder_name}/{img_name}.png"
+def vector_to_text_jpg(array, width, height, save_folder_name, img_name):
+    save_path = f"./{save_folder_name}/{img_name}.jpg"
     if os.path.exists(save_path) == False:
         px = 1 / plt.rcParams["figure.dpi"]  # inch to pixel
         fig = plt.figure(frameon=False, figsize=(width * px, height * px))
@@ -96,7 +96,7 @@ def vector_to_save_image(json_path_list, save_folder_name):
             if "label" in sample_data:
                 label = sample_data["label"]
                 label_list.append(label)
-            img_path = vector_to_text_png(vector, width, height, save_folder_name, sample_id)
+            img_path = vector_to_text_jpg(vector, width, height, save_folder_name, sample_id)
             img_path_list.append(img_path)
 
     df = pd.DataFrame(columns=["id", "img_path", "label"])
