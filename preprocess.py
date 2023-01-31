@@ -27,7 +27,7 @@ def main(args):
 
     kfold = StratifiedKFold(n_splits=args.kfold_n_splits, shuffle=args.kfold_shuffle)
 
-    for fold_num, train_test_idx in enumerate(kfold.split(X=train_df_long, y=train_df_long[RawDataColumns.length])):
+    for fold_num, train_test_idx in enumerate(kfold.split(X=train_df_long, y=train_df_long[args.kfold_label])):
         train_idx, test_idx = train_test_idx
         fold_train_long_df = train_df_long.iloc[train_idx].reset_index(drop=True)
         fold_valid_long_df = train_df_long.iloc[test_idx].reset_index(drop=True)
@@ -56,5 +56,6 @@ if __name__ == "__main__":
     parser.add_argument("--test_csv_path", type=str, default=None)
     parser.add_argument("--kfold_n_splits", type=int, default=5)
     parser.add_argument("--kfold_shuffle", type=bool, default=False)
+    parser.add_argument("--kfold_label", type=str, default="length")
     args = parser.parse_args()
     main(args)

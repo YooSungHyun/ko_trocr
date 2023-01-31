@@ -11,7 +11,7 @@ for i in 0
 do 
 CUDA_VISIBLE_DEVICES=$GPU_IDS \
 deepspeed train.py \
-    --output_dir "output_${SEED}/fold${i}" \
+    --output_dir "output/fold${i}" \
     --seed 42 \
     --train_csv_path "data/preprocess/fold${i}_train.csv" \
     --valid_csv_path "data/preprocess/fold${i}_valid.csv" \
@@ -24,7 +24,7 @@ deepspeed train.py \
     --evaluation_strategy "epoch" \
     --save_strategy "epoch" \
     --logging_strategy "steps" \
-    --logging_steps "100" \
+    --logging_steps "10" \
     --save_total_limit 2 \
     --load_best_model_at_end \
     --learning_rate 5e-5 \
