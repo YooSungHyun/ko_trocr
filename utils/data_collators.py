@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+import numpy as np
+from PIL import Image
 from transformers import TrOCRProcessor
 
 from literal import DatasetColumns
@@ -15,9 +17,9 @@ class DataCollatorForOCR:
     return_tensors: str = "pt"
 
     def __call__(self, features: List[Dict[str, Any]]) -> Dict[str, Any]:
+        images = [feature[DatasetColumns.pixel_values].convert("RGB") for feature in features]
 
-        images = [feature[DatasetColumns.pixel_values] for feature in features]
-        batch = self.processor(images, return_tensors=self.return_tensors)
+        batch = self.processor.image_processor(images, return_tensors=self.return_tensors)
         if DatasetColumns.labels in features[0]:
             texts = [feature[DatasetColumns.labels] for feature in features]
             labels = self.processor.tokenizer(

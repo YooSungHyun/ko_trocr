@@ -1,6 +1,6 @@
 import random
-from typing import Any, Callable, Dict
-
+from typing import Any, Callable, Dict, Tuple
+import pandas as pd
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
@@ -9,8 +9,14 @@ from straug.camera import JpegCompression, Pixelate
 from straug.geometry import Rotate
 from straug.noise import GaussianNoise
 from torchvision.transforms import Compose, Grayscale
-
+import albumentations as A
 from literal import DatasetColumns
+import math
+import cv2
+import unicodedata
+from tacobox import Taco
+
+random.seed(42)
 
 
 class Custom_Rotate(Rotate):
@@ -126,3 +132,142 @@ class Augmentator:
         shake_idx = random.randint(0, len(self.shake_aug) - 1)
         string_augs = Compose([self.resolution_aug[resolution_idx], self.shake_aug[shake_idx]])
         return string_augs
+
+
+class ChildWrittenAugmentator:
+    def __init__(self, aug_with_compose_prob: float = 0.8):
+        self.__aug_with_compose_prob = aug_with_compose_prob
+
+    def augmentation(self, raw: Dict[str, Any]):
+        augs = list()
+        max_holes = random.randint(1, 5)
+        height_size = np.array(raw[DatasetColumns.pixel_values][0]).shape[0]
+        min_height_size = math.ceil(height_size / 10)
+        max_height_size = min_height_size * 2
+        max_height = random.randint(min_height_size, max_height_size)
+
+        width_size = np.array(raw[DatasetColumns.pixel_values][0]).shape[1]
+        min_width_size = math.ceil(width_size / 5)
+        max_width = random.randint(min_width_size, width_size)
+
+        black_cutout = A.CoarseDropout(
+            p=1,
+            max_height=max_height,
+            max_width=max_width,
+            min_holes=1,
+            max_holes=max_holes,
+            min_height=1,
+            min_width=1,
+            fill_value=0,
+        )
+        augs.append(black_cutout)
+        if random.random() < self.__aug_with_compose_prob:
+            augmentation_idx = random.randint(0, len(augs) - 1)
+            raw[DatasetColumns.pixel_values] = [
+                Image.fromarray(augs[augmentation_idx](image=np.array(image.convert("RGB")))["image"])
+                for image in raw[DatasetColumns.pixel_values]
+            ]
+        return raw
+
+
+class RandomConcat:
+    def __init__(
+        self,
+        train_csv_path: str,
+        image_size: Tuple[int, int],
+        aug_with_compose_prob: float = 0.8,
+        vconcat_flag: bool = False,
+        hconcat_flag: bool = True,
+    ):
+        self.image_size = image_size
+        self.train_csv = pd.read_csv(train_csv_path)
+        self.__aug_with_compose_prob = aug_with_compose_prob
+        self.vconcat_flag = vconcat_flag
+        self.hconcat_flag = hconcat_flag
+        self.max_label_len = max(self.train_csv["label"].apply(lambda x: len(x)))
+
+    def augmentation(self, raw: Dict[str, Any]):
+        labels = raw["labels"]
+        images = raw["pixel_values"]
+        image_results = list()
+        label_results = list()
+        for idx, ori_img in enumerate(images):
+            np_ori_img = np.array(ori_img)
+            label = unicodedata.normalize("NFC", labels[idx])
+            while (np_ori_img.shape[0] > 50 and np_ori_img.shape[1] > 50) and len(label) <= self.max_label_len // 2:
+                concat_idx = random.randrange(0, len(self.train_csv))
+                concat_csv_row = self.train_csv.iloc[concat_idx]
+                concat_label = concat_csv_row["label"]
+                concat_img_path = concat_csv_row["img_path"]
+                concat_img = cv2.imread(concat_img_path)
+                if (
+                    concat_img.shape[0] <= 50
+                    or concat_img.shape[1] <= 50
+                    or len(concat_label) > self.max_label_len // 2
+                ):
+                    continue
+                # 둘다 True인 경우 hconcat 결과로 반영되도록 의도함. vconcat은 해도 되는게 맞을지 모르겠음
+                if self.vconcat_flag:
+                    resize_ori_img = self.image_processor.resize(
+                        np_ori_img, size=[self.image_size[1], np_ori_img.shape[0]]
+                    )
+                    resize_concat_img = self.image_processor.resize(
+                        concat_img, size=[self.image_size[1], concat_img.shape[0]]
+                    )
+                    if random.random() < 0.5:
+                        img_result = cv2.vconcat([resize_ori_img, resize_concat_img])
+                        label_result = label + concat_label
+                    else:
+                        img_result = cv2.vconcat([resize_concat_img, resize_ori_img])
+                        label_result = concat_label + label
+                    img_result = cv2.resize(img_result, self.image_size)
+                if self.hconcat_flag:
+                    resize_ori_img = cv2.resize(np_ori_img, (np_ori_img.shape[1], self.image_size[0]))
+                    resize_concat_img = cv2.resize(concat_img, (np_ori_img.shape[1], self.image_size[0]))
+                    if random.random() < 0.5:
+                        img_result = cv2.hconcat([resize_ori_img, resize_concat_img])
+                        label_result = label + concat_label
+                    else:
+                        img_result = cv2.hconcat([resize_concat_img, resize_ori_img])
+                        label_result = concat_label + label
+                    img_result = cv2.resize(img_result, self.image_size)
+                if label != concat_label:
+                    image_results.append(Image.fromarray(img_result))
+                    label_results.append(unicodedata.normalize("NFKD", label_result))
+                    break
+        if (len(image_results) > 0 and len(label_results) > 0) and random.random() < self.__aug_with_compose_prob:
+            raw[DatasetColumns.pixel_values] = image_results
+            raw[DatasetColumns.labels] = label_results
+        return raw
+
+
+class TACo:
+    def __init__(self):
+        # creating taco object for augmentation (checkout Easter2.0 paper)
+        self.mytaco = Taco(
+            cp_vertical=0.2,
+            cp_horizontal=0.25,
+            max_tw_vertical=100,
+            min_tw_vertical=10,
+            max_tw_horizontal=50,
+            min_tw_horizontal=10,
+        )
+
+    def apply_taco_augmentations(self, input_img):
+        if random.random() <= 0.15:
+            augmented_img = self.mytaco.apply_vertical_taco(input_img, corruption_type="random")
+        else:
+            augmented_img = input_img
+        if random.random() <= 0.15:
+            augmented_img = self.mytaco.apply_vertical_taco(augmented_img, corruption_type="random")
+        else:
+            augmented_img = input_img
+        return augmented_img
+
+    def augmentation(self, raw: Dict[str, Any]):
+        for image in raw[DatasetColumns.pixel_values]:
+            if image.size[0] > 150 and image.size[1] > 100:
+                taco_image = self.apply_taco_augmentations(cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY))
+                rgb_taco_image = cv2.cvtColor(taco_image.astype(np.float32), cv2.COLOR_GRAY2RGB)
+                raw[DatasetColumns.pixel_values] = [Image.fromarray(rgb_taco_image.astype(np.uint8))]
+        return raw

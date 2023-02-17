@@ -10,6 +10,7 @@ from transformers.trainer_utils import EvalPrediction
 
 from literal import RawDataColumns
 from utils.dataset_utils import to_subchar
+import unicodedata
 
 
 def seed_everything(random_seed: int) -> None:
@@ -29,6 +30,11 @@ def compute_metrics(pred: EvalPrediction, processor: TrOCRProcessor) -> Dict[str
 
     references = processor.tokenizer.batch_decode(labels_ids, skip_special_tokens=True)
     predictions = processor.tokenizer.batch_decode(pred_ids, skip_special_tokens=True)
+
+    for ref, pred in list(zip(references, predictions)):
+        if unicodedata.normalize("NFC", ref) == "통심통":
+            print(pred)
+            break
 
     acc = 0
     for i in range(len(references)):

@@ -7,7 +7,7 @@ class Folder:
     """
     data folder의 상대경로
     """
-    data_preprocess = "./data/preprocess/"
+    data_preprocess = "./data/aug_preprocess/"
     """
     data/preprocess/의 상대경로
     """
@@ -15,6 +15,7 @@ class Folder:
     """
     data/raw/의 상대경로
     """
+    data_aug_preprocess = "./data/train_aug/"
 
 
 @dataclass

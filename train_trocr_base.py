@@ -18,10 +18,9 @@ from transformers.trainer_utils import is_main_process
 
 from arguments import DatasetsArguments, ModelArguments, MyTrainingArguments
 from utils import DataCollatorForOCR
-from utils.augmentation import RandomConcat, TACo
+from utils.augmentation import ChildWrittenAugmentator
 from utils.dataset_utils import get_dataset
 from utils.training_utils import compute_metrics, seed_everything
-from torchvision.transforms import Compose
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"  # true면 데드락 -> 살펴보기????
@@ -41,13 +40,9 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
         is_sub_char = True
 
     image_processor = AutoImageProcessor.from_pretrained(vision_model_name)
-    rand_concat_aug = RandomConcat(
-        aug_with_compose_prob=1.0,
-        image_size=list(image_processor.size.values()),
-        train_csv_path=dataset_args.train_csv_path,
-    )
+    augmentator = ChildWrittenAugmentator(aug_with_compose_prob=0.8)
     train_dataset = get_dataset(dataset_args.train_csv_path, is_sub_char=is_sub_char)
-    # train_dataset.set_transform(Compose([rand_concat_aug.augmentation]))
+    # train_dataset.set_transform(augmentator.augmentation)
     valid_dataset = get_dataset(dataset_args.valid_csv_path, is_sub_char=is_sub_char)
 
     """ Tokenizer and vocab process
@@ -68,37 +63,38 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     6. Set new VisionEncoderDecoderModel
     """
     # Step 1. Load TROCR Config only vision_encoder
-    encoder_config = AutoConfig.from_pretrained(vision_model_name).encoder
-    encoder_config.add_pooling_layer = False  # https://github.com/huggingface/transformers/issues/7924 ddp error
+    # encoder_config = AutoConfig.from_pretrained(vision_model_name)
+    # encoder_config.add_pooling_layer = False  # https://github.com/huggingface/transformers/issues/7924 ddp error
 
     # Step 2. Load Text Config (Encoder only or Decoder Style)
-    decoder_config = AutoConfig.from_pretrained(text_model_name).decoder
+    # decoder_config = AutoConfig.from_pretrained(text_model_name)
 
     # Step 3. Set new VisionEncoderDecoderConfig
-    config = VisionEncoderDecoderConfig.from_encoder_decoder_configs(
-        encoder_config=encoder_config, decoder_config=decoder_config
-    )
-    config.hidden_size = max(encoder_config.hidden_size, decoder_config.hidden_size)  # for deepspeed
+    config = VisionEncoderDecoderConfig.from_pretrained(vision_model_name)
+    config.hidden_size = max(config.encoder.hidden_size, config.decoder.hidden_size)  # for deepspeed
 
     # Step 4. Additional Config Setting ##########################################################################
-    ocr_processor = TrOCRProcessor(image_processor=image_processor, tokenizer=tokenizer)
-    # ocr_processor.image_processor.resample = 5
-    config.vocab_size = config.decoder.vocab_size
-    config.decoder_start_token_id = (
-        tokenizer.cls_token_id if tokenizer.cls_token_id is not None else tokenizer.bos_token_id
-    )
-    config.pad_token_id = ocr_processor.tokenizer.pad_token_id
+    ocr_processor = TrOCRProcessor.from_pretrained(vision_model_name)
+    # config.vocab_size = config.decoder.vocab_size
+    # config.decoder_start_token_id = (
+    # tokenizer.cls_token_id if tokenizer.cls_token_id is not None else tokenizer.bos_token_id
+    # )
+    # config.pad_token_id = ocr_processor.tokenizer.pad_token_id
 
     # Setting BeamSearch parameters
-    config.eos_token_id = tokenizer.sep_token_id if tokenizer.sep_token_id is not None else tokenizer.eos_token_id
+    # config.eos_token_id = tokenizer.sep_token_id if tokenizer.sep_token_id is not None else tokenizer.eos_token_id
     config.max_length = training_args.generation_max_length
     config.num_beams = training_args.generation_num_beams
     ###############################################################################################################
 
     # Step 5-1. Load TROCR Model only vision_encoder
-    encoder_model = VisionEncoderDecoderModel.from_pretrained(vision_model_name).get_encoder()
-    decoder_model = VisionEncoderDecoderModel.from_pretrained(text_model_name).get_decoder()
-
+    model = VisionEncoderDecoderModel.from_pretrained(vision_model_name)
+    for name, param in model.named_parameters():
+        if name.startswith("encoder.embeddings"):
+            param.requires_grad = False
+        elif name.startswith("decoder.roberta.embeddings"):
+            param.requires_grad = False
+    model.config = config
     # Step 5-2. Load Text Model (Encoder only or Decoder Style)
     # decoder_model = AutoModelForCausalLM.from_pretrained(
     #     text_model_name,
@@ -110,10 +106,8 @@ def main(model_args: ModelArguments, dataset_args: DatasetsArguments, training_a
     # )  # Model Key args MUST in from_pretrained time
 
     # Step 6. Set new VisionEncoderDecoderModel
-    model = VisionEncoderDecoderModel(config, encoder_model, decoder_model)
-    # for name, param in model.named_parameters():
-    #     if not name.startswith("encoder"):
-    #         param.requires_grad = False
+    # model = VisionEncoderDecoderModel(config, encoder_model, decoder_model)
+
     # Load DataCollator For Training Step
     data_collator = DataCollatorForOCR(processor=ocr_processor)
 
