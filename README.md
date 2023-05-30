@@ -1,4 +1,5 @@
-# kyowon_ocr
+# ko-trocr
+https://huggingface.co/ddobokki/ko-trocr
 
 ## environment
 ```
